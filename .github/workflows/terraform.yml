@@ -2,6 +2,9 @@ name: .NET App Build
 
 on:
   push:
+    branches:
+      - main
+      - 'release/**'
 
 jobs:
   build:
@@ -14,16 +17,23 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x'  # Change as needed
+          dotnet-version: '6.0.x'
+
+      - name: Find solution file
+        id: find-sln
+        run: |
+          sln=$(find . -name "*.sln" | head -n 1)
+          echo "Found solution: $sln"
+          echo "sln_path=$sln" >> "$GITHUB_OUTPUT"
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore ${{ steps.find-sln.outputs.sln_path }}
 
       - name: Build
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build ${{ steps.find-sln.outputs.sln_path }} --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test ${{ steps.find-sln.outputs.sln_path }} --no-build --verbosity normal
 
       - name: Publish
-        run: dotnet publish -c Release -o ./publish
+        run: dotnet publish ./src/Project1/Project1.csproj -c Release -o ./publish
