@@ -1,15 +1,29 @@
-name: Self-hosted Runner Test
+name: .NET App Build
 
 on:
   push:
 
 jobs:
-  test-runner:
-    runs-on: ubuntu-latest  # or 'self-hosted' + 'ubuntu' if you use labels
+  build:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Print Runner Info
-        run: |
-          echo "Runner is working!"
-          echo "Hostname: $(hostname)"
-          echo "OS: $(uname -a)"
-          echo "User: $(whoami)"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'  # Change as needed
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test --no-build --verbosity normal
+
+      - name: Publish
+        run: dotnet publish -c Release -o ./publish
